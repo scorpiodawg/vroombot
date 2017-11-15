@@ -102,13 +102,14 @@ module.exports = function (ctx, cb) {
               }
             };
             var slackMessages = whatsNew.map(function (car) {
+              console.log("Adding slack message for ", car.make, car.model);
               return {
                 car: car,
                 slack: {
-                json: {
-                  text: sprintf("Found %1$s %2$s @%3$s %4$s <%5$s|See it>", car.make, car.model, car.price, car.driveType.match(/awd/i) ? "(AWD)" : "", car.links.self)
+                  json: {
+                    text: sprintf("Found %1$s %2$s @%3$s %4$s <%5$s|See it>", car.make, car.model, car.price, car.driveType.match(/awd/i) ? "(AWD)" : "", car.links.self)
+                  }
                 }
-              }
               };
             });
             // request.post(slackUrl, slackMsg, (err, resp) => {
@@ -121,6 +122,7 @@ module.exports = function (ctx, cb) {
             // });
 
             slackMessages.forEach(function (o) {
+              console.log("Posting Slack ping for ", o.car.make, o.car.model);
               request.post(slackUrl, o.slackMsg, (err, resp) => {
                 if (resp.statusCode !== 200) {
                   console.log("Ok that failed, err=" + err);
