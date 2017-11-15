@@ -1,0 +1,29 @@
+{
+  "name": "vroombot",
+  "version": "1.0.0",
+  "description": "Not really a package, just a test CLI",
+  "main": "vroom-cron.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/scorpiodawg/vroombot.git"
+  },
+  "keywords": [
+    "vroom",
+    "api"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/scorpiodawg/vroombot/issues"
+  },
+  "homepage": "https://github.com/scorpiodawg/vroombot#readme",
+  "devDependencies": {
+    "https": "^1.0.0",
+    "request": "^2.83.0",
+    "require": "^2.4.20",
+    "sprintf-js": "^1.1.1"
+  }
+}

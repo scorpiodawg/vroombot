@@ -1,20 +1,39 @@
+// Dependencies
 const https = require('https');
-const request = require('request@2.81.0');
-const vroomApiUrl = "https://invsearch.vroomapi.com/v2/inventory?limit=50&sort=p-a&offset=0&keywords=((minivan))";
-const vroomUrl = "https://www.vroom.com/catalog/all-years/all-makes/minivan/?sort=price";
+const request = require('request');
+const sprintf = require('sprintf-js').sprintf;
+
+// const vroomApiUrl = "https://invsearch.vroomapi.com/v2/inventory?limit=50&sort=p-a&offset=0&keywords=((minivan))";
+// const vroomUrl = "https://www.vroom.com/catalog/all-years/all-makes/minivan/?sort=price";
+// const vroomApiUrl = "https://www.vroom.com/catalog/all-years/honda_pilot,kia_sorento,mitsubishi_outlander,hyundai_santa_fe,toyota_highlander,toyota_sienna,mazda_cx-9/?sort=price";
+
+const prefs = {
+  apiUrl: "https://invsearch.vroomapi.com/v2/inventory?limit=50&sort=p-a&offset=0&mm=%1$s",
+  webUrl: "https://www.vroom.com/catalog/all-years/honda_pilot,kia_sorento,mitsubishi_outlander,hyundai_santa_fe,toyota_highlander,toyota_sienna,mazda_cx-9/?sort=price",
+  models: [
+    'honda_pilot',
+    'kia_sorento',
+    'mitsubishi_outlander',
+    'hyundai_santa_fe',
+    'toyota_highlander',
+    'toyota_sienna',
+    'mazda_cx-9'
+  ],
+  slackMsgTemplate: "VROOM: %1$d new hits, <%2$s|check them>"
+};
 
 function extractCandidates(data) {
   var ret = [];
   for (var car of data) {
     var attr = car.attributes;
-    if ((attr.make === "Honda" || attr.make === "Toyota") && 
-        attr.bodyType && attr.bodyType.toLowerCase().includes("minivan")) {
+    if (attr.isAvailable === true || attr.soldStatus === 0) {
       ret.push({
         id: car.id,
         make: attr.make,
         model: attr.model,
         year: attr.year,
-        miles: attr.miles
+        miles: attr.miles,
+        seats7: !!attr.optionalFeatures.match(/7 Passenger Seating/g)
       });
     }
   }
@@ -34,14 +53,16 @@ function diff(oldCars, newCars) {
   return d;
 }
 
-module.exports = function(ctx, cb) {
-  https.get(vroomApiUrl, (res) => {
+module.exports = function (ctx, cb) {
+  let url = sprintf(prefs.apiUrl, prefs.models.join(','));
+  console.log("GETting", url)
+  https.get(url, (res) => {
     console.log('statusCode:', res.statusCode);
     console.log('headers:', res.headers);
     var responseJson = "";
     res.on('data', (chunk) => responseJson += chunk);
     res.on('end', () => {
-    var parsedData = '';
+      var parsedData = '';
       try {
         parsedData = JSON.parse(responseJson);
         console.log('JSON parsed ok');
@@ -71,17 +92,22 @@ module.exports = function(ctx, cb) {
             if (error) return cb(error);
             // ...and send notification
             slackUrl = ctx.secrets.SLACK_WEBHOOK;
-            request.post(slackUrl, { json: { text: `VROOM: ${whatsNew.length} new hits, <${vroomUrl}|check them>` } }, (err, resp) => {
+            let slackMsg = {
+              json: {
+                text: sprintf(prefs.slackMsgTemplate, whatsNew.length, prefs.webUrl)
+              }
+            };
+            request.post(slackUrl, slackMsg, (err, resp) => {
               if (resp.statusCode !== 200) {
                 console.log("Ok that failed, err=" + err);
-                cb(err || [ 'Failed, status = ' + response.statusCode ]);
+                cb(err || ['Failed, status = ' + response.statusCode]);
               } else {
-                cb(null, { data: whatsNew || [ 'Nothing new (unexpected)' ] });
+                cb(null, { data: whatsNew || ['Nothing new (unexpected)'] });
               }
             });
           });
         } else {
-          cb(null, { data: [ 'Nothing new (0 diffs)' ] });
+          cb(null, { data: ['Nothing new (0 diffs)'] });
         }
       });
     });
