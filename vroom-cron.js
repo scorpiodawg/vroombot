@@ -36,7 +36,7 @@ function extractCandidates(data) {
         seats7: !!attr.optionalFeatures.match(/7 Passenger Seating/g)
       });
     } else {
-      console.log(attr.make, attr.model, "for $", attr.price, " is already sold");
+      console.log(attr.make, attr.model, "for $", attr.listingPrice, " is already sold");
     }
   }
   return ret;
