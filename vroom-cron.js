@@ -33,6 +33,8 @@ function extractCandidates(data) {
         model: attr.model,
         year: attr.year,
         miles: attr.miles,
+        driveType: attr.driveType,
+        price: attr.listingPrice,
         seats7: !!attr.optionalFeatures.match(/7 Passenger Seating/g)
       });
     } else {
@@ -99,13 +101,34 @@ module.exports = function (ctx, cb) {
                 text: sprintf(prefs.slackMsgTemplate, whatsNew.length, prefs.webUrl)
               }
             };
-            request.post(slackUrl, slackMsg, (err, resp) => {
-              if (resp.statusCode !== 200) {
-                console.log("Ok that failed, err=" + err);
-                cb(err || ['Failed, status = ' + response.statusCode]);
-              } else {
-                cb(null, { data: whatsNew || ['Nothing new (unexpected)'] });
+            var slackMessages = whatsNew.map(function (car) {
+              return {
+                car: car,
+                slack: {
+                json: {
+                  text: sprintf("Found %1$s %2$s @%3$s %4$s <%5$s|See it>", car.make, car.model, car.price, car.driveType.match(/awd/i) ? "(AWD)" : "", car.links.self)
+                }
               }
+              };
+            });
+            // request.post(slackUrl, slackMsg, (err, resp) => {
+            //   if (resp.statusCode !== 200) {
+            //     console.log("Ok that failed, err=" + err);
+            //     cb(err || ['Failed, status = ' + response.statusCode]);
+            //   } else {
+            //     cb(null, { data: whatsNew || ['Nothing new (unexpected)'] });
+            //   }
+            // });
+
+            slackMessages.forEach(function (o) {
+              request.post(slackUrl, o.slackMsg, (err, resp) => {
+                if (resp.statusCode !== 200) {
+                  console.log("Ok that failed, err=" + err);
+                  cb(err || ['Failed, status = ' + response.statusCode]);
+                } else {
+                  cb(null, { data: [o.car] || ['Unexpected error'] });
+                }
+              });
             });
           });
         } else {
