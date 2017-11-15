@@ -1,13 +1,13 @@
 // Dependencies
-var https = require('https');
-var request = require('request');
-var sprintf = require('sprintf-js').sprintf;
+const https = require('https');
+const request = require('request');
+const sprintf = require('sprintf-js').sprintf;
 
-// var vroomApiUrl = "https://invsearch.vroomapi.com/v2/inventory?limit=50&sort=p-a&offset=0&keywords=((minivan))";
-// var vroomUrl = "https://www.vroom.com/catalog/all-years/all-makes/minivan/?sort=price";
-// var vroomApiUrl = "https://www.vroom.com/catalog/all-years/honda_pilot,kia_sorento,mitsubishi_outlander,hyundai_santa_fe,toyota_highlander,toyota_sienna,mazda_cx-9/?sort=price";
+// const vroomApiUrl = "https://invsearch.vroomapi.com/v2/inventory?limit=50&sort=p-a&offset=0&keywords=((minivan))";
+// const vroomUrl = "https://www.vroom.com/catalog/all-years/all-makes/minivan/?sort=price";
+// const vroomApiUrl = "https://www.vroom.com/catalog/all-years/honda_pilot,kia_sorento,mitsubishi_outlander,hyundai_santa_fe,toyota_highlander,toyota_sienna,mazda_cx-9/?sort=price";
 
-var prefs = {
+const prefs = {
   apiUrl: "https://invsearch.vroomapi.com/v2/inventory?limit=50&sort=p-a&offset=0&mm=%1$s",
   webUrl: "https://www.vroom.com/catalog/all-years/honda_pilot,kia_sorento,mitsubishi_outlander,hyundai_santa_fe,toyota_highlander,toyota_sienna,mazda_cx-9/?sort=price",
   models: [
@@ -54,7 +54,7 @@ function diff(oldCars, newCars) {
 }
 
 module.exports = function (ctx, cb) {
-  var url = sprintf(prefs.apiUrl, prefs.models.join(','));
+  let url = sprintf(prefs.apiUrl, prefs.models.join(','));
   console.log("GETting", url)
   https.get(url, (res) => {
     console.log('statusCode:', res.statusCode);
@@ -92,7 +92,7 @@ module.exports = function (ctx, cb) {
             if (error) return cb(error);
             // ...and send notification
             slackUrl = ctx.secrets.SLACK_WEBHOOK;
-            var slackMsg = {
+            let slackMsg = {
               json: {
                 text: sprintf(prefs.slackMsgTemplate, whatsNew.length, prefs.webUrl)
               }
