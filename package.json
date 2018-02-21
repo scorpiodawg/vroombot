@@ -23,7 +23,6 @@
   "devDependencies": {
     "https": "^1.0.0",
     "request": "^2.83.0",
-    "require": "^2.4.20",
     "sprintf-js": "^1.1.1"
   }
 }
